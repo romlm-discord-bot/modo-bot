@@ -5,9 +5,8 @@ from discord.ext import commands
 from threading import Thread
 import asyncio
 
-from env.environement import TALKING_ROLE_NAME, ASKING_ROLE_NAME, PROF_ROLE_NAME,\
-    ELEVE_ROLE_NAME, ADMIN_ROLE_NAME, GUILD_NAME, SECURED_VOCAL_SERVER_NAMES, BOT_TOKEN
-
+from env.environement import TALKING_ROLE_NAME, ASKING_ROLE_NAME, PROF_ROLE_NAME, ELEVE_ROLE_NAME, \
+    ADMIN_ROLE_NAME, GUILD_NAME, SECURED_VOCAL_SERVER_NAMES, BOT_TOKEN, ALLOWED_ROLES, ALLOWED_CHANNELS
 
 bot = commands.Bot(command_prefix='!')
 
@@ -52,7 +51,10 @@ class ChannelConnectEvent(Thread):
 
 async def on_vocal_server_joined(member, channel):
     print(f"user @{member.name} connected to {channel.name}")
-    if channel.name in SECURED_VOCAL_SERVER_NAMES:
+    #checks if the user is neither allowed to skeak not talking and trying to connect to secured server
+    if channel.name in SECURED_VOCAL_SERVER_NAMES\
+            and len(set(ALLOWED_ROLES).intersection([role.name for role in member.roles])) <= 0\
+            and TALKING_ROLE_NAME not in [role.name for role in member.roles]:
         await mute(member)
     else:
         await unmute(member)
@@ -66,6 +68,10 @@ async def on_vocal_server_left(member, channel):
         await mute(member)
 
 
+async def is_authorized_channel(ctx):
+    return ctx.channel.name in ALLOWED_CHANNELS
+
+
 @bot.event
 async def on_ready():
     print('Logged in as')
@@ -74,8 +80,12 @@ async def on_ready():
     print('------')
     guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
     for member in guild.members:
+        if ELEVE_ROLE_NAME in [role.name for role in member.roles]:
+            await mute(member)
         if ASKING_ROLE_NAME in [role.name for role in member.roles]:
-            await remove_role(member, ASKING_ROLE_NAME)
+            asking_students.append((member.id, member.name, ""))
+        elif TALKING_ROLE_NAME in [role.name for role in member.roles]:
+            await unmute(member)
 
     trigger = ChannelConnectEvent(bot, on_vocal_server_joined=on_vocal_server_joined,
                                   on_vocal_server_left=on_vocal_server_left)
@@ -86,6 +96,7 @@ async def on_ready():
              description="commande pour lever la main,\n"
                          "!ask pour connaitre le motif pour lequel on leve la main si l'on lève déjà la main",
              usage="[motif]")
+@commands.check(is_authorized_channel)
 async def ask(ctx, topic=""):
     if ELEVE_ROLE_NAME in [role.name for role in ctx.author.roles]:
 
@@ -128,6 +139,7 @@ async def ask(ctx, topic=""):
 @bot.command(brief="baisser la main",
              description="commande pour baisser la main",
              usage="")
+@commands.check(is_authorized_channel)
 async def cancel(ctx):
     student = [student for student in asking_students if student[0] is ctx.author.id]
     if len(student) < 1:
@@ -141,6 +153,7 @@ async def cancel(ctx):
 @bot.command(brief="liste des élèves levant la main",
              description="montre la liste des élèves levant la main",
              usage="")
+@commands.check(is_authorized_channel)
 async def list(ctx):
     if PROF_ROLE_NAME in [role.name for role in ctx.author.roles] \
             or ADMIN_ROLE_NAME in [role.name for role in ctx.author.roles]:
@@ -170,8 +183,10 @@ async def list(ctx):
                          "si override vaut \"False\" l'élève ne sera pas "
                          "autorisé tant qu'un autre élève parlera",
              usage="<student_name> [override=False]")
+@commands.check(is_authorized_channel)
 async def allow(ctx, member_name: str, override=False):
-    if PROF_ROLE_NAME not in [role.name for role in ctx.author.roles]:
+    # checks if the author has an allowed role
+    if len(set(ALLOWED_ROLES).intersection(set([role.name for role in ctx.author.roles]))) <= 0:
         await ctx.send("not allowed")
         return
 
@@ -203,8 +218,9 @@ async def allow(ctx, member_name: str, override=False):
 @bot.command(brief="retirer la parole à un élève",
              description="retire le droit de parler à l'élève qui parle",
              usage="")
+@commands.check(is_authorized_channel)
 async def disallow(ctx, member_name: str):
-    if PROF_ROLE_NAME not in [role.name for role in ctx.author.roles]:
+    if len(set(ALLOWED_ROLES).intersection(set([role.name for role in ctx.author.roles]))) <= 0:
         await ctx.send("not allowed")
         return
 
@@ -235,7 +251,6 @@ async def add_role(member, role_name):
 
 
 async def mute(member):
-
     channels = [channel for channel in bot.get_all_channels() if channel.type == discord.channel.ChannelType.voice]
     member_in_voice = False
     for channel in channels:
@@ -244,8 +259,6 @@ async def mute(member):
             return True
 
     return False
-
-
 
 
 async def unmute(member):
@@ -257,5 +270,6 @@ async def unmute(member):
             return
 
     return False
+
 
 bot.run(BOT_TOKEN)

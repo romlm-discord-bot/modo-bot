@@ -4,7 +4,10 @@ ADMIN_ROLE_NAME = "Admin"
 ASKING_ROLE_NAME = "Asking"
 TALKING_ROLE_NAME = "Talking"
 
+ALLOWED_ROLES = [PROF_ROLE_NAME]
+ALLOWED_CHANNELS = ["général"]
+
 GUILD_NAME = "test server"
 SECURED_VOCAL_SERVER_NAMES = ["Général"]
 
-BOT_TOKEN = 'Njg4MTMxMDkxOTk0NzcxNjgz.Xm0DXw.ley4L4scyHagNSQVsjvwk-J0ZmM'
+BOT_TOKEN = "Njg4MTMxMDkxOTk0NzcxNjgz.Xm0HPQ.i4uVErziCwTbo7UYl81u9odVN8c"
