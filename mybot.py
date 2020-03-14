@@ -105,19 +105,19 @@ async def ask(ctx, topic=""):
                                                                                          ctx.author.roles] or ASKING_ROLE_NAME in [
                                                                                      role.name for role in
                                                                                      ctx.author.roles]):
-            asking_students.append((ctx.author.id, ctx.author.name, topic))
+            asking_students.append((ctx.author.id, ctx.author.nick, topic))
 
             try:
                 await add_role(ctx.author, ASKING_ROLE_NAME)
             except discord.errors.Forbidden as e:
                 print(e, file=stderr)
             if topic is not "":
-                await ctx.send(f"@{ctx.author.name}, vous avez levé la main pour motif : \"{topic}\"")
+                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main pour motif : \"{topic}\"")
             else:
-                await ctx.send(f"@{ctx.author.name}, vous avez levé la main")
+                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main")
 
         elif TALKING_ROLE_NAME in [role.name for role in ctx.author.roles]:
-            await ctx.send(f"@{ctx.author.name}, vous avez déjà la parole")
+            await ctx.send(f"@{ctx.author.nick}, vous avez déjà la parole")
 
         else:
             student = [student for student in asking_students if student[0] is ctx.author.id][0]
@@ -126,12 +126,12 @@ async def ask(ctx, topic=""):
             if topic is "" and student[2] is not "":
                 await ctx.send(f"@{student[1]}, vous avez déjà levé la main pour le motif : \"{student[2]}\"")
             elif topic is not "" and student[2] is not "":
-                new_student = (ctx.author.id, ctx.author.name, topic)
+                new_student = (ctx.author.id, ctx.author.nick, topic)
                 asking_students[index] = new_student
                 await ctx.send(
                     f"@{new_student[1]}, vous avez remplacé le motif \"{student[2]}\" par le nouveau motif \"{topic}\"")
             elif topic is not "" and student[2] is "":
-                new_student = (ctx.author.id, ctx.author.name, topic)
+                new_student = (ctx.author.id, ctx.author.nick, topic)
                 asking_students[index] = new_student
                 await ctx.send(f"@{new_student[1]}, votre motif de prise de parole est \"{topic}\"")
 
@@ -143,11 +143,11 @@ async def ask(ctx, topic=""):
 async def cancel(ctx):
     student = [student for student in asking_students if student[0] is ctx.author.id]
     if len(student) < 1:
-        await ctx.send(f"@{ctx.author.name}, vous n'avez pas la main levée")
+        await ctx.send(f"@{ctx.author.nick}, vous n'avez pas la main levée")
     else:
         asking_students.remove(student[0])
         await remove_role(ctx.author, ASKING_ROLE_NAME)
-        await ctx.send(f"@{ctx.author.name}, vous ne levez plus la main")
+        await ctx.send(f"@{ctx.author.nick}, vous ne levez plus la main")
 
 
 @bot.command(brief="liste des élèves levant la main",
@@ -173,7 +173,7 @@ async def list(ctx):
 
     else:
         await ctx.send(
-            f"@{ctx.author.name},vous n\'êtes pas autorisé à accéder à la liste des personnes levant la main")
+            f"@{ctx.author.nick},vous n\'êtes pas autorisé à accéder à la liste des personnes levant la main")
 
 
 @bot.command(brief="donner la parole",
