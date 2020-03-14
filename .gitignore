@@ -1,0 +1,5 @@
+/venv/*
+!/*
+
+#remove IDE files
+/.idea
