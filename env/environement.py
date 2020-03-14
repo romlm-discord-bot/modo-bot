@@ -1,3 +1,5 @@
+import os
+
 ELEVE_ROLE_NAME = "Elève"
 PROF_ROLE_NAME = "Professeur"
 ADMIN_ROLE_NAME = "Admin"
@@ -10,4 +12,4 @@ ALLOWED_CHANNELS = ["général"]
 GUILD_NAME = "test server"
 SECURED_VOCAL_SERVER_NAMES = ["Général"]
 
-BOT_TOKEN = "Njg4MTMxMDkxOTk0NzcxNjgz.Xm0HPQ.i4uVErziCwTbo7UYl81u9odVN8c"
+BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
