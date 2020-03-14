@@ -3,17 +3,11 @@ from sys import stderr
 import discord
 from discord.ext import commands
 from threading import Thread
-from time import sleep
 import asyncio
 
-ELEVE_ROLE_NAME = "Elève"
-PROF_ROLE_NAME = "Professeur"
-ADMIN_ROLE_NAME = "Admin"
-ASKING_ROLE_NAME = "Asking"
-TALKING_ROLE_NAME = "Talking"
+from env.environement import TALKING_ROLE_NAME, ASKING_ROLE_NAME, PROF_ROLE_NAME,\
+    ELEVE_ROLE_NAME, ADMIN_ROLE_NAME, GUILD_NAME, SECURED_VOCAL_SERVER_NAMES, BOT_TOKEN
 
-GUILD_NAME = "test server"
-VOCAL_SERVER_NAME = "Général"
 
 bot = commands.Bot(command_prefix='!')
 
@@ -58,14 +52,18 @@ class ChannelConnectEvent(Thread):
 
 async def on_vocal_server_joined(member, channel):
     print(f"user @{member.name} connected to {channel.name}")
-    if channel.name == VOCAL_SERVER_NAME:
+    if channel.name in SECURED_VOCAL_SERVER_NAMES:
         await mute(member)
+    else:
+        await unmute(member)
 
 
 async def on_vocal_server_left(member, channel):
-    print(f"user @{member.name} connected to {channel.name}")
-    if channel.name == VOCAL_SERVER_NAME:
+    print(f"user @{member.name} disconnected from {channel.name}")
+    if channel.name in SECURED_VOCAL_SERVER_NAMES:
         await unmute(member)
+    else:
+        await mute(member)
 
 
 @bot.event
@@ -192,11 +190,11 @@ async def allow(ctx, member_name: str, override=False):
             talking_student = talking_student[0]
 
             await remove_role(talking_student, TALKING_ROLE_NAME)
-            await mute(talking_student, discord.utils.get(bot.get_all_channels(), name=VOCAL_SERVER_NAME))
+            await mute(talking_student)
             await ctx.send(f"@{talking_student.name}, vous n'avez plus la parole")
         await remove_role(member, ASKING_ROLE_NAME)
         await add_role(member, TALKING_ROLE_NAME)
-        await unmute(member, discord.utils.get(bot.get_all_channels(), name=VOCAL_SERVER_NAME))
+        await unmute(member)
         await ctx.send(f"@{member_name}, vous avez la parole")
     else:
         await ctx.send(f"{member_name} non trouvé dans la liste des personnes levant la main")
@@ -212,7 +210,7 @@ async def disallow(ctx, member_name: str):
 
     member = ctx.author.guild.get_member_named(member_name)
     if member:
-        await mute(member, discord.utils.get(bot.get_all_channels(), name=VOCAL_SERVER_NAME))
+        await mute(member)
         await remove_role(member, TALKING_ROLE_NAME)
         await ctx.send(f"@{member_name}, vous n'avez plus la parole")
     else:
@@ -236,30 +234,28 @@ async def add_role(member, role_name):
         print(e, file=stderr)
 
 
-async def mute(member, channel=None):
-    if channel:
-        channel = discord.utils.get(bot.get_all_channels(), name=channel.name)
-        if channel.type == discord.ChannelType.voice and member in channel.members:
+async def mute(member):
+
+    channels = [channel for channel in bot.get_all_channels() if channel.type == discord.channel.ChannelType.voice]
+    member_in_voice = False
+    for channel in channels:
+        if member in channel.members:
             await member.edit(mute=True)
-        else:
-            # TODO add written result
-            print("failed", file=stderr)
-    else:
-        await member.edit(mute=True)
+            return True
+
+    return False
 
 
-async def unmute(member, channel=None):
-    if channel:
-        channel = discord.utils.get(bot.get_all_channels(), name=channel.name)
-        if channel.type == discord.ChannelType.voice and member in channel.members:
+
+
+async def unmute(member):
+    channels = [channel for channel in bot.get_all_channels() if channel.type == discord.channel.ChannelType.voice]
+    member_in_voice = False
+    for channel in channels:
+        if member in channel.members:
             await member.edit(mute=False)
-        else:
-            # TODO add written result
-            print("failed", file=stderr)
-    else:
-        await member.edit(mute=False)
+            return
 
+    return False
 
-TOKEN = 'Njg4MTMxMDkxOTk0NzcxNjgz.Xmv2Yg.g13kuYDGCyIBAaawJeM3UeDggpM'
-
-bot.run(TOKEN)
+bot.run(BOT_TOKEN)
