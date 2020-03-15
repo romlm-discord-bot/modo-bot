@@ -112,12 +112,12 @@ async def ask(ctx, topic=""):
             except discord.errors.Forbidden as e:
                 print(e, file=stderr)
             if topic is not "":
-                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main pour motif : \"{topic}\"")
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez levé la main pour motif : \"{topic}\"")
             else:
-                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main")
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez levé la main")
 
         elif TALKING_ROLE_NAME in [role.name for role in ctx.author.roles]:
-            await ctx.send(f"@{ctx.author.nick}, vous avez déjà la parole")
+            await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez déjà la parole")
 
         else:
             student = [student for student in asking_students if student[0] is ctx.author.id][0]
