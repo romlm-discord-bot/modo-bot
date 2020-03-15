@@ -7,9 +7,9 @@ ASKING_ROLE_NAME = "Asking"
 TALKING_ROLE_NAME = "Talking"
 
 ALLOWED_ROLES = [PROF_ROLE_NAME]
-ALLOWED_CHANNELS = ["chat-cours"]
+ALLOWED_CHANNELS = ["général"]
 
-GUILD_NAME = "Première 1"
-SECURED_VOCAL_SERVER_NAMES = ["Classe"]
+GUILD_NAME = "test server"
+SECURED_VOCAL_SERVER_NAMES = ["Général"]
 
 BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
