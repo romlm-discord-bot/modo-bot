@@ -229,12 +229,12 @@ async def disallow(ctx, member_name: str):
         return
 
     member = ctx.author.guild.get_member_named(member_name)
-    if member:
+    if member and TALKING_ROLE_NAME in [role.name for role in member.roles]:
         await mute(member)
         await remove_role(member, TALKING_ROLE_NAME)
         await ctx.send(f"@{member_name}, vous n'avez plus la parole")
     else:
-        await ctx.send(f"{member_name} non trouvé")
+        await ctx.send(f"{member_name} non trouvé dans les personnes pouvant parler")
 
 
 async def remove_role(member, role_name):
