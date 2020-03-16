@@ -27,8 +27,8 @@ class ChannelConnectEvent(Thread):
     async def run(self):
         channels = {}
         while True:
-
-            for channel in [channel for channel in self._bot.get_all_channels()
+            guild = discord.utils.get(self._bot.guilds, name=GUILD_NAME)
+            for channel in [channel for channel in guild.channels
                             if channel.type is discord.channel.ChannelType.voice]:
                 if channel.name not in channels.keys():
                     channels[channel.name] = channel.members
@@ -51,7 +51,7 @@ class ChannelConnectEvent(Thread):
 
 async def on_vocal_server_joined(member, channel):
     print(f"user @{member.name} connected to {channel.name}")
-    #checks if the user is neither allowed to skeak not talking and trying to connect to secured server
+    #checks if the user is neither allowed to speak not talking and trying to connect to secured server
     if channel.name in SECURED_VOCAL_SERVER_NAMES\
             and len(set(ALLOWED_ROLES).intersection([role.name for role in member.roles])) <= 0\
             and TALKING_ROLE_NAME not in [role.name for role in member.roles]:
@@ -83,7 +83,7 @@ async def on_ready():
         if ELEVE_ROLE_NAME in [role.name for role in member.roles]:
             await mute(member)
         if ASKING_ROLE_NAME in [role.name for role in member.roles]:
-            asking_students.append((member.id, member.name, ""))
+            asking_students.append((member.id, ""))
         elif TALKING_ROLE_NAME in [role.name for role in member.roles]:
             await unmute(member)
 
@@ -105,35 +105,38 @@ async def ask(ctx, topic=""):
                                                                                          ctx.author.roles] or ASKING_ROLE_NAME in [
                                                                                      role.name for role in
                                                                                      ctx.author.roles]):
-            asking_students.append((ctx.author.id, ctx.author.nick, topic))
+            asking_students.append((ctx.author.id, topic))
 
             try:
                 await add_role(ctx.author, ASKING_ROLE_NAME)
             except discord.errors.Forbidden as e:
                 print(e, file=stderr)
             if topic is not "":
-                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main pour motif : \"{topic}\"")
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez levé la main pour motif : \"{topic}\"")
             else:
-                await ctx.send(f"@{ctx.author.nick}, vous avez levé la main")
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez levé la main")
 
         elif TALKING_ROLE_NAME in [role.name for role in ctx.author.roles]:
-            await ctx.send(f"@{ctx.author.nick}, vous avez déjà la parole")
+            await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez déjà la parole")
 
         else:
             student = [student for student in asking_students if student[0] is ctx.author.id][0]
             index = asking_students.index(student)
 
-            if topic is "" and student[2] is not "":
-                await ctx.send(f"@{student[1]}, vous avez déjà levé la main pour le motif : \"{student[2]}\"")
-            elif topic is not "" and student[2] is not "":
-                new_student = (ctx.author.id, ctx.author.nick, topic)
+            if topic is "" and student[1] is not "":
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous avez "
+                               f"déjà levé la main pour le motif : \"{student[1]}\"")
+            elif topic is not "" and student[1] is not "":
+                new_student = (ctx.author.id, topic)
                 asking_students[index] = new_student
                 await ctx.send(
-                    f"@{new_student[1]}, vous avez remplacé le motif \"{student[2]}\" par le nouveau motif \"{topic}\"")
-            elif topic is not "" and student[2] is "":
-                new_student = (ctx.author.id, ctx.author.nick, topic)
+                    f"@{ctx.author.nick if ctx.author.nick else ctx.author.name }, vous avez remplacé "
+                    f"le motif \"{student[1]}\" par le nouveau motif \"{topic}\"")
+            elif topic is not "" and student[1] is "":
+                new_student = (ctx.author.id, topic)
                 asking_students[index] = new_student
-                await ctx.send(f"@{new_student[1]}, votre motif de prise de parole est \"{topic}\"")
+                await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name},"
+                               f" votre motif de prise de parole est \"{topic}\"")
 
 
 @bot.command(brief="baisser la main",
@@ -141,13 +144,13 @@ async def ask(ctx, topic=""):
              usage="")
 @commands.check(is_authorized_channel)
 async def cancel(ctx):
-    student = [student for student in asking_students if student[0] is ctx.author.id]
-    if len(student) < 1:
-        await ctx.send(f"@{ctx.author.nick}, vous n'avez pas la main levée")
+    students = [student for student in asking_students if student[0] is ctx.author.id]
+    if len(students) < 1:
+        await ctx.send(f"@{ctx.author.nick if ctx.author.nick else ctx.author.name}, vous n'avez pas la main levée")
     else:
-        asking_students.remove(student[0])
+        asking_students.remove(students[0])
         await remove_role(ctx.author, ASKING_ROLE_NAME)
-        await ctx.send(f"@{ctx.author.nick}, vous ne levez plus la main")
+        await ctx.send(f"@{ctx.author.nick if ctx.author.name else ctx.author.name}, vous ne levez plus la main")
 
 
 @bot.command(brief="liste des élèves levant la main",
@@ -162,7 +165,9 @@ async def list(ctx):
             await ctx.send("il n'y a aucun élève levant la main")
         else:
             msg = "liste des élèves levant la main: \n"
-            for user_id, user_name, topic in asking_students:
+            for user_id, topic in asking_students:
+                member = ctx.guild.get_member(user_id)
+                user_name = member.nick if member.nick else member.name
                 msg += user_name + ", motif: "
                 if topic is not "":
                     msg += f"\"{topic}\""
@@ -173,7 +178,7 @@ async def list(ctx):
 
     else:
         await ctx.send(
-            f"@{ctx.author.nick},vous n\'êtes pas autorisé à accéder à la liste des personnes levant la main")
+            f"@{ctx.author.nick if ctx.author.nick else ctx.author.name},vous n\'êtes pas autorisé à accéder à la liste des personnes levant la main")
 
 
 @bot.command(brief="donner la parole",
@@ -190,17 +195,16 @@ async def allow(ctx, member_name: str, override=False):
         await ctx.send("not allowed")
         return
 
-    students = [student for student in asking_students if student[1] == member_name]
     guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+    member = guild.get_member_named(member_name)
     talking_student = [member for member in guild.members if TALKING_ROLE_NAME in [role.name for role in member.roles]]
     if not override and len(talking_student) is 1:
         await ctx.send(f"l'élève @{talking_student[0].name} est déjà en train de parler, "
-                       f"faite \"!allow {member_name} true\" pour "
+                       f"faite \"!allow \"{member_name}\" true\" pour "
                        f"autoriser cet élève à parler à la place de {talking_student[0].name}")
 
-    elif len(students) is 1:
-        asking_students.pop(asking_students.index(students[0]))
-        member = ctx.author.guild.get_member_named(member_name)
+    elif member:
+        asking_students.remove([std for std in asking_students if std[0] == member.id][0])
         if len(talking_student) is 1:
             talking_student = talking_student[0]
 
@@ -225,12 +229,12 @@ async def disallow(ctx, member_name: str):
         return
 
     member = ctx.author.guild.get_member_named(member_name)
-    if member:
+    if member and TALKING_ROLE_NAME in [role.name for role in member.roles]:
         await mute(member)
         await remove_role(member, TALKING_ROLE_NAME)
         await ctx.send(f"@{member_name}, vous n'avez plus la parole")
     else:
-        await ctx.send(f"{member_name} non trouvé")
+        await ctx.send(f"{member_name} non trouvé dans les personnes pouvant parler")
 
 
 async def remove_role(member, role_name):
@@ -244,32 +248,27 @@ async def remove_role(member, role_name):
 async def add_role(member, role_name):
     role = discord.utils.get(member.guild.roles, name=role_name)
     try:
-        print(f"tried to mute {member.name}")
         await member.add_roles(role)
     except discord.errors.Forbidden as e:
         print(e, file=stderr)
 
 
 async def mute(member):
-    channels = [channel for channel in bot.get_all_channels() if channel.type == discord.channel.ChannelType.voice]
-    member_in_voice = False
+    guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+    channels = [channel for channel in guild.channels if channel.type == discord.channel.ChannelType.voice]
     for channel in channels:
         if member in channel.members:
             await member.edit(mute=True)
-            return True
-
-    return False
+            return
 
 
 async def unmute(member):
-    channels = [channel for channel in bot.get_all_channels() if channel.type == discord.channel.ChannelType.voice]
-    member_in_voice = False
+    guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+    channels = [channel for channel in guild.channels if channel.type == discord.channel.ChannelType.voice]
     for channel in channels:
         if member in channel.members:
             await member.edit(mute=False)
             return
-
-    return False
 
 
 bot.run(BOT_TOKEN)
