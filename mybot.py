@@ -5,10 +5,10 @@ from discord.ext import commands
 from threading import Thread
 import asyncio
 
-from env.environement import TALKING_ROLE_NAME, ASKING_ROLE_NAME, PROF_ROLE_NAME, ELEVE_ROLE_NAME, \
-    ADMIN_ROLE_NAME, GUILD_NAME, SECURED_VOCAL_SERVER_NAMES, BOT_TOKEN, ALLOWED_ROLES, ALLOWED_CHANNELS
+from env.environement import TALKING_ROLE_NAME, ASKING_ROLE_NAME, PROF_ROLE_NAME, ELEVE_ROLE_NAME, ADMIN_ROLE_NAME,\
+    GUILD_NAME, SECURED_VOCAL_SERVER_NAMES, BOT_TOKEN, ALLOWED_ROLES, ALLOWED_CHANNELS, BOT_PREFIX
 
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix=BOT_PREFIX)
 
 asking_students = []
 
@@ -79,7 +79,11 @@ async def on_ready():
     print(bot.user.id)
     print('------')
     guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
-    for member in guild.members:
+    channels = [channel for channel in guild.voice_channels if channel.name in [SECURED_VOCAL_SERVER_NAMES]]
+    members = []
+    for channel in channels:
+        members += channel.members
+    for member in members:
         if ELEVE_ROLE_NAME in [role.name for role in member.roles]:
             await mute(member)
         if ASKING_ROLE_NAME in [role.name for role in member.roles]:

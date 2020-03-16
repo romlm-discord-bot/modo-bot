@@ -1,4 +1,5 @@
 import os
+BOT_PREFIX = "!"
 
 ELEVE_ROLE_NAME = "Elève"
 PROF_ROLE_NAME = "Professeur"
