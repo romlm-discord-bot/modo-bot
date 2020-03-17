@@ -14,16 +14,16 @@
 
 - help:
   - help: shows all the available commands for the bot
-  - help <command_name>: shows the help for the specified command
+  - help \<command_name\>: shows the help for the specified command
 - ask:
   - ask: gives the student the asking student role
-  - ask <reason>: same as ask but stores the reason
+  - ask \<reason\>: same as ask but stores the reason
   - nb: there cannot be more than one ask request by person
 - cancel: cancels the ask request
 - allow:
-  - allow <username>: only works on students with Asking role, unmute the student, gives the Talking role and unmute student
-  - allow <username> <override: [false]/true>: if a student is already talking us override true to disallow talking student and allow the <username> related user
+  - allow \<username\>: only works on students with Asking role, unmute the student, gives the Talking role and unmute student
+  - allow \<username\> \<override: [false]/true\>: if a student is already talking us override true to disallow talking student and allow the \<username\> related user
   - nb: there cannot be more than one Talking student
  
 - disallow:
-  - disallow <username>: only works on Talking students, mute the student and removes his Talking role
+  - disallow \<username\>: only works on Talking students, mute the student and removes his Talking role
