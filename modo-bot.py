@@ -64,8 +64,6 @@ async def on_vocal_server_left(member, channel):
     print(f"user @{member.name} disconnected from {channel.name}")
     if channel.name in SECURED_VOCAL_SERVER_NAMES:
         await unmute(member)
-    else:
-        await mute(member)
 
 
 async def is_authorized_channel(ctx):
