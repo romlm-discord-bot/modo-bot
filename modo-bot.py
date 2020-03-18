@@ -193,34 +193,43 @@ async def list(ctx):
                          "autorisé tant qu'un autre élève parlera",
              usage="<student_name> [override=False]")
 @commands.check(is_authorized_channel)
-async def allow(ctx, member_name: str, override=False):
+async def allow(ctx, member_name: str, command=None):
     # checks if the author has an allowed role
     if len(set(ALLOWED_ROLES).intersection(set([role.name for role in ctx.author.roles]))) <= 0:
-        await ctx.send("not allowed")
+        await ctx.send("@{")
         return
 
-    guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
-    member = guild.get_member_named(member_name)
-    talking_student = [member for member in guild.members if TALKING_ROLE_NAME in [role.name for role in member.roles]]
-    if not override and len(talking_student) is 1:
-        await ctx.send(f"l'élève @{talking_student[0].name} est déjà en train de parler, "
-                       f"faite \"!allow \"{member_name}\" true\" pour "
-                       f"autoriser cet élève à parler à la place de {talking_student[0].name}")
+    voice_members = []
+    for channel in ctx.guild.voice_channels:
+        voice_members += channel.members
 
-    elif member:
-        asking_students.remove([std for std in asking_students if std[0] == member.id][0])
-        if len(talking_student) is 1:
-            talking_student = talking_student[0]
+    member = ctx.guild.get_member_named(member_name)
+    talking_students = [member for member in ctx.guild.members if TALKING_ROLE_NAME in [role.name for role in member.roles]]
 
-            await remove_role(talking_student, TALKING_ROLE_NAME)
-            await mute(talking_student)
-            await ctx.send(f"@{talking_student.name}, vous n'avez plus la parole")
+    if len(talking_students) <= 0 and member:
         await remove_role(member, ASKING_ROLE_NAME)
         await add_role(member, TALKING_ROLE_NAME)
         await unmute(member)
         await ctx.send(f"@{member_name}, vous avez la parole")
-    else:
-        await ctx.send(f"{member_name} non trouvé dans la liste des personnes levant la main")
+
+    elif member:
+        if not command:
+            await ctx.send(f"il y a déja {len(talking_students)} personnes qui parlent dans le serveur vocal")
+            await ctx.send(f"faites !allow <user_name> add pour ajouter une personne sur le serveur vocal")
+            await ctx.send(f"faites !allow <user_name> replace enlever toute les "
+                           f"personnes qui parlent et ajouter @{member.name}")
+        elif command is "add":
+            await remove_role(member, ASKING_ROLE_NAME)
+            await add_role(member, TALKING_ROLE_NAME)
+            await unmute(member)
+            await ctx.send(f"@{member_name}, vous avez la parole")
+        elif command is "replace":
+            for student in talking_students:
+                await remove_role(student, TALKING_ROLE_NAME)
+                await mute(student)
+                await ctx.send(f"@{student.name}, vous n'avez plus la parole")
+        else:
+            await ctx.send(f"{member_name} non trouvé dans la liste des personnes levant la main")
 
 
 @bot.command(brief="retirer la parole à un élève",

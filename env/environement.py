@@ -1,14 +1,14 @@
 import os
 BOT_PREFIX = "!"
 
-ELEVE_ROLE_NAME = "Elève"
+ELEVE_ROLE_NAME = "élève"
 PROF_ROLE_NAME = "Professeur"
 ADMIN_ROLE_NAME = "Admin"
 ASKING_ROLE_NAME = "Asking"
 TALKING_ROLE_NAME = "Talking"
 
 ALLOWED_ROLES = [PROF_ROLE_NAME]
-ALLOWED_CHANNELS = ["cours"]
+ALLOWED_CHANNELS = ["classe"]
 
 GUILD_NAME = "Première 1"
 SECURED_VOCAL_SERVER_NAMES = ["Classe"]
