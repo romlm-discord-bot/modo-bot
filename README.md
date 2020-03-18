@@ -21,9 +21,10 @@
   - nb: there cannot be more than one ask request by person
 - cancel: cancels the ask request
 - allow:
-  - allow \<username\>: only works on students with Asking role, unmute the student, gives the Talking role and unmute student
-  - allow \<username\> \<override: [false]/true\>: if a student is already talking us override true to disallow talking student and allow the \<username\> related user
-  - nb: there cannot be more than one Talking student
+  - allow \<username\>: only works on students with Asking role and if no student is talking, unmute the student, gives the Talking role and unmute student
+  - allow \<username\> \[command: add/replace\]: if a student is already talking.
+  - allow \<username\> add: to unmute a member alongwith the other talking students
+  - allow \<username\> replace: to mute all talking students and unmute the username student
  
 - disallow:
   - disallow \<username\>: only works on Talking students, mute the student and removes his Talking role

@@ -189,7 +189,7 @@ async def list(ctx):
                          " train de parler pour la donner à l'élève autorisé\n"
                          "si override vaut \"False\" l'élève ne sera pas "
                          "autorisé tant qu'un autre élève parlera",
-             usage="<student_name> [override=False]")
+             usage="<student_name> [commande: replace|add]")
 @commands.check(is_authorized_channel)
 async def allow(ctx, member_name: str, command=None):
     # checks if the author has an allowed role
@@ -213,8 +213,8 @@ async def allow(ctx, member_name: str, command=None):
     elif member:
         if not command:
             await ctx.send(f"il y a déja {len(talking_students)} personnes qui parlent dans le serveur vocal")
-            await ctx.send(f"faites !allow <user_name> add pour ajouter une personne sur le serveur vocal")
-            await ctx.send(f"faites !allow <user_name> replace enlever toute les "
+            await ctx.send(f"faites '!allow <user_name> add' pour ajouter une personne sur le serveur vocal")
+            await ctx.send(f"faites '!allow <user_name> replace' enlever toute les "
                            f"personnes qui parlent et ajouter @{member.name}")
         elif command is "add":
             await remove_role(member, ASKING_ROLE_NAME)
